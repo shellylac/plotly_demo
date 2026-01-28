@@ -105,7 +105,7 @@ marker = list(
 
 ------------------------------------------------------------------------
 
-# Part B: Main Chart Types in Plotly
+# Main Chart Types in Plotly
 
 ## 1. Scatter Plot
 
@@ -113,7 +113,7 @@ Basic scatter plot showing the relationship between car weight and miles per gal
 
 ```{r scatter-basic}
 # Using the mtcars dataset
-plot_ly(data = mtcars , 
+p_scatter <- plot_ly(data = mtcars , 
         x = ~wt, 
         y = ~mpg, 
         type = 'scatter',
@@ -122,6 +122,8 @@ plot_ly(data = mtcars ,
   layout(title = "Car Weight vs MPG",
          xaxis = list(title = "Weight (1000 lbs)"),
          yaxis = list(title = "Miles Per Gallon"))
+
+p_scatter
 ```
 
 ## 2. Line Plot
@@ -130,16 +132,19 @@ plot_ly(data = mtcars ,
 # NOTE! - need to order the points so they connect correctly
 mtcars_sorted <- mtcars[order(mtcars$wt), ]
 
-plot_ly(data = mtcars_sorted, 
+p_line <- plot_ly(data = mtcars_sorted, 
         x = ~wt, 
         y = ~mpg, 
         type = 'scatter',
         mode = 'lines', # Change the mode - from 'markers' to 'lines'
-        marker = list(size = 10, color = 'blue')
+        marker = list(size = 10, color = 'blue'),
+        line = list(color = "red")
        ) |>
   layout(title = "Car Weight vs MPG",
          xaxis = list(title = "Weight (1000 lbs)"),
          yaxis = list(title = "Miles Per Gallon"))
+
+p_line
 ```
 
 ## 3. Bar Chart
@@ -229,6 +234,34 @@ plot_ly(data = iris,
 ```
 
 ------------------------------------------------------------------------
+# Arranging multiple figures in a single plot - `subplot`
+
+```{r subplots}
+
+p_subplot <- plotly::subplot(
+          p_scatter,
+          p_line,
+          nrows = 1,
+          # For horizontal you use 
+          # nrows = 2,
+          # heights = c(0.7, 0.3),  # First row: 70%, Second row: 30%
+          shareX = FALSE,
+          shareY = FALSE,
+          titleX = TRUE,
+          titleY = TRUE)
+p_subplot
+
+```
+
+------------------------------------------------------------------------
+# Saving a plot as a HTML object
+
+```{r subplots}
+htmlwidgets::saveWidget(widget = p_subplot, file = here('output', 'my_plotly_figure.html'))
+```
+
+
+------------------------------------------------------------------------
 
 # A pyramid plot journey...
 
@@ -248,7 +281,7 @@ pyramid_death_data_recoded <- pyramid_death_data |>
                                    levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99", "100+")))
 ```
 
--   Note the modification I've made to get bespoke hover info showing in the figure (there is more than one way to specify hover info in plotly!)
+-   Note - See how you can get more bespoke hover info showing in the figure (there is more than one way to specify hover info in plotly!)
 
 ```{r step1-basic}
 # Pyramid plot
@@ -369,19 +402,66 @@ pyramid_by_geo <- pyramid_by_geo |>
 pyramid_by_geo
 ```
 
+## Extra example: Show All / Hide All Buttons
+
+```{r show_all_hide_all}
+p <- plot_ly(type = "scatter", mode = "markers") %>%
+  add_trace(
+    data = iris,
+    x = ~Sepal.Length,
+    y = ~Sepal.Width ,
+    color = ~Species
+  ) %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "buttons",
+        buttons = list(
+          list(
+            label = "Show all",
+            method = "restyle",
+            args = list("visible", TRUE)
+          ),
+          list(
+            label = "Hide all",
+            method = "restyle",
+            args = list("visible", FALSE)
+          )
+        )
+      )
+    )
+  )
+  p
+```
+
 ## Animating a figure
 
--   We are going to show changes in Qld mortality rates over time
+-   We are going to show changes in Qld mortality rates over time (like those in the [CHO report](https://www.choreport.health.qld.gov.au/from-the-cho/ageing-and-future-healthcare-demand))
 
 ```{r step1-basic}
 # Read in the mortality data 
 mort_data <- read_csv(here('input', 'mort_pyramid_data.csv'), show_col_types = FALSE)
+mort_sexasr_data <- read_csv(here('input', 'mort_sexasr_data.csv'), show_col_types = FALSE)
+
+# Ensure age category levels are ordered correctly
 mort_data_recoded <- mort_data |> 
     dplyr::mutate(age_label = factor(age_label, 
-                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99", "100+")))
+                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95+")))
+
+# Ensure sex category levels are ordered
+mort_sexasr_data_recoded <- mort_sexasr_data |>
+     dplyr::mutate(sex_label = factor(sex_label, levels = c("Males", "Femalse")))
 ```
 
-```{r step3-styling}
+#### The `frame` parameter
+
+-   When you write `frame = ~year` this is what happens
+    -   Splits the data by unique year
+    -   Creates a frame for each value
+    -   Links those frames together
+    -   Adds play/pause controls automatically
+
+```{r mort_animation}
 mort_animation_plot <-
         plot_ly(data = mort_data_recoded) |>
           add_trace(
@@ -400,217 +480,41 @@ mort_animation_plot <-
           x = 'x1',
           y = 'y1'
         )
+
+mort_animation_plot <- mort_animation_plot |>
+  layout(
+      bargap = 0.1,
+      barmode = 'overlay',
+      yaxis = list(title = list(text = 'Age group',
+                                standoff = 10),
+                   range = c(-0.5,
+                             length(levels(mort_data_recoded$age_label)) - 0.5)
+                   ),
+      xaxis = list(
+        range = c(min(mort_data_recoded$prop) - 1,
+                  max(mort_data_recoded$prop) + 1),
+        title = "% of total population"
+        , tickmode = 'array'
+        , tickvals = c(-15, -10, -5, 0, 5, 10, 15)
+        , ticktext = c('15', '10', '5', '0', '5', '10', '15')
+        , autosize = T
+        , showgrid = F
+      )
+  ) |>
+ plotly::animation_opts(frame = 180, easing = "linear", redraw = FALSE) |>
+ plotly::animation_slider(currentvalue = list(prefix = "YEAR: ", font = list(color = "black")), visible = TRUE) |>
+ plotly::animation_button(font = list(family = "Arial Black", size = 16),
+                                   bordercolor = "#563188", 
+                                   borderwidth = 1.5
+                                   )
 mort_animation_plot
 ```
 
-## Step 4: Enhanced Hover Information
+-   Also Note - in the above examples we use a data column `hovertext_col` for hoverinfo.
 
-Add rich hover text with multiple data points.
-
-```{r step4-hover}
-# Prepare hover text with car name and additional info
-mtcars$car_name <- rownames(mtcars)
-
-# Create custom hover text
-mtcars$hover_text <- paste0(
-  "<b>", mtcars$car_name, "</b><br>",
-  "HP: ", mtcars$hp, "<br>",
-  "MPG: ", mtcars$mpg, "<br>",
-  "Weight: ", mtcars$wt, " (1000 lbs)<br>",
-  "Cylinders: ", mtcars$cyl, "<br>",
-  "Transmission: ", mtcars$transmission
-)
-
-p4 <- plot_ly(data = mtcars %>% filter(transmission == "Automatic"),
-              x = ~hp,
-              y = ~mpg,
-              name = 'Automatic',
-              type = 'scatter',
-              mode = 'markers',
-              marker = list(size = 12, 
-                           color = colors['Automatic'],
-                           line = list(color = 'white', width = 1)),
-              text = ~hover_text,
-              hoverinfo = 'text') %>%
-  add_trace(data = mtcars %>% filter(transmission == "Manual"),
-            x = ~hp,
-            y = ~mpg,
-            name = 'Manual',
-            marker = list(size = 12,
-                         color = colors['Manual'],
-                         line = list(color = 'white', width = 1)),
-            text = ~hover_text,
-            hoverinfo = 'text')
-
-p4 %>%
-  layout(
-    title = list(
-      text = "Step 4: Enhanced Hover Information",
-      font = list(family = "Arial, sans-serif", size = 20, color = '#2C3E50')
-    ),
-    xaxis = list(
-      title = "Horsepower",
-      titlefont = list(size = 16, family = "Arial, sans-serif")
-    ),
-    yaxis = list(
-      title = "Miles Per Gallon",
-      titlefont = list(size = 16, family = "Arial, sans-serif")
-    ),
-    plot_bgcolor = '#F8F9FA',
-    paper_bgcolor = '#FFFFFF',
-    hoverlabel = list(
-      bgcolor = "white",
-      font = list(family = "Arial, sans-serif", size = 12)
-    )
-  )
-```
-
-## Step 5: Adding Dropdown Menus for Interactive Filtering
-
-Final step: add dropdown menus to switch between different Y-axis variables.
-
-```{r step5-dropdown}
-# Prepare data with hover text for different variables
-mtcars_full <- mtcars %>%
-  mutate(
-    hover_mpg = paste0("<b>", car_name, "</b><br>",
-                       "HP: ", hp, "<br>",
-                       "MPG: ", mpg, "<br>",
-                       "Transmission: ", transmission),
-    hover_qsec = paste0("<b>", car_name, "</b><br>",
-                        "HP: ", hp, "<br>",
-                        "Quarter Mile Time: ", qsec, " sec<br>",
-                        "Transmission: ", transmission),
-    hover_wt = paste0("<b>", car_name, "</b><br>",
-                      "HP: ", hp, "<br>",
-                      "Weight: ", wt, " (1000 lbs)<br>",
-                      "Transmission: ", transmission)
-  )
-
-# Create base plot with all three Y variables
-p5 <- plot_ly(data = mtcars_full %>% filter(transmission == "Automatic")) %>%
-  # MPG traces (visible by default)
-  add_trace(x = ~hp, y = ~mpg,
-            name = 'Automatic',
-            type = 'scatter', mode = 'markers',
-            marker = list(size = 12, color = colors['Automatic'],
-                         line = list(color = 'white', width = 1)),
-            text = ~hover_mpg, hoverinfo = 'text',
-            visible = TRUE) %>%
-  add_trace(data = mtcars_full %>% filter(transmission == "Manual"),
-            x = ~hp, y = ~mpg,
-            name = 'Manual',
-            type = 'scatter', mode = 'markers',
-            marker = list(size = 12, color = colors['Manual'],
-                         line = list(color = 'white', width = 1)),
-            text = ~hover_mpg, hoverinfo = 'text',
-            visible = TRUE) %>%
-  # Quarter mile time traces (hidden initially)
-  add_trace(data = mtcars_full %>% filter(transmission == "Automatic"),
-            x = ~hp, y = ~qsec,
-            name = 'Automatic',
-            type = 'scatter', mode = 'markers',
-            marker = list(size = 12, color = colors['Automatic'],
-                         line = list(color = 'white', width = 1)),
-            text = ~hover_qsec, hoverinfo = 'text',
-            visible = FALSE) %>%
-  add_trace(data = mtcars_full %>% filter(transmission == "Manual"),
-            x = ~hp, y = ~qsec,
-            name = 'Manual',
-            type = 'scatter', mode = 'markers',
-            marker = list(size = 12, color = colors['Manual'],
-                         line = list(color = 'white', width = 1)),
-            text = ~hover_qsec, hoverinfo = 'text',
-            visible = FALSE) %>%
-  # Weight traces (hidden initially)
-  add_trace(data = mtcars_full %>% filter(transmission == "Automatic"),
-            x = ~hp, y = ~wt,
-            name = 'Automatic',
-            type = 'scatter', mode = 'markers',
-            marker = list(size = 12, color = colors['Automatic'],
-                         line = list(color = 'white', width = 1)),
-            text = ~hover_wt, hoverinfo = 'text',
-            visible = FALSE) %>%
-  add_trace(data = mtcars_full %>% filter(transmission == "Manual"),
-            x = ~hp, y = ~wt,
-            name = 'Manual',
-            type = 'scatter', mode = 'markers',
-            marker = list(size = 12, color = colors['Manual'],
-                         line = list(color = 'white', width = 1)),
-            text = ~hover_wt, hoverinfo = 'text',
-            visible = FALSE)
-
-# Add dropdown menu
-p5 <- p5 %>%
-  layout(
-    title = list(
-      text = "Step 5: Interactive Dropdown Menu",
-      font = list(family = "Arial, sans-serif", size = 20, color = '#2C3E50')
-    ),
-    xaxis = list(
-      title = "Horsepower",
-      titlefont = list(size = 16, family = "Arial, sans-serif")
-    ),
-    yaxis = list(
-      title = "Miles Per Gallon",
-      titlefont = list(size = 16, family = "Arial, sans-serif")
-    ),
-    plot_bgcolor = '#F8F9FA',
-    paper_bgcolor = '#FFFFFF',
-    updatemenus = list(
-      list(
-        type = "dropdown",
-        active = 0,
-        buttons = list(
-          list(method = "update",
-               args = list(list(visible = c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE)),
-                          list(yaxis = list(title = "Miles Per Gallon"))),
-               label = "MPG"),
-          list(method = "update",
-               args = list(list(visible = c(FALSE, FALSE, TRUE, TRUE, FALSE, FALSE)),
-                          list(yaxis = list(title = "Quarter Mile Time (sec)"))),
-               label = "Quarter Mile Time"),
-          list(method = "update",
-               args = list(list(visible = c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE)),
-                          list(yaxis = list(title = "Weight (1000 lbs)"))),
-               label = "Weight")
-        ),
-        x = 0.12,
-        xanchor = 'left',
-        y = 1.15,
-        yanchor = 'top'
-      )
-    )
-  )
-
-p5
-```
+    -   Entries in this column are formatted text: `"Females\nYear: 1971\nAge group: 0-4 years\nProportion of population: 9.7%\nCount:  88,974"`
 
 ------------------------------------------------------------------------
-
-# Summary
-
-## Part A Highlights
-
-We covered the main chart types in plotly:
-
--   **Scatter plots**: For relationships between continuous variables
--   **Line plots**: For time series and trends
--   **Bar charts**: For categorical comparisons
--   **Box plots**: For distribution comparisons across groups
--   **Histograms**: For single variable distributions
--   **Heatmaps**: For correlation matrices and 2D densities
--   **3D scatter plots**: For multivariate relationships
-
-## Part B Progression
-
-We built up interactive features systematically:
-
-1.  **Basic scatter plot**: Simple starting point
-2.  **Multiple traces**: Comparing groups (transmission types)
-3.  **Custom styling**: Colors, fonts, and visual enhancements
-4.  **Rich hover text**: Detailed information on mouse-over
-5.  **Dropdown menus**: Interactive variable selection
 
 ## Key Plotly Concepts
 
