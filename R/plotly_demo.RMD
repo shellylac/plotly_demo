@@ -32,8 +32,8 @@ Plotly R follows a layered grammar of graphics approach, similar to ggplot2, but
 
 ```         
 p <- plot_ly()
-p <- p %>% add_trace(...)
-p <- p %>% layout(...)
+p <- p |> add_trace(...)
+p <- p |> layout(...)
 ```
 
 -   Nothing is “drawn” until the figure is printed or returned.
@@ -47,12 +47,12 @@ p <- p %>% layout(...)
 
 ```         
 # This works
-plot_ly(data = df) %>%
+plot_ly(data = df) |>
   add_trace(x = ~a, y = ~b)
 
 # This also works
-plot_ly() %>%
- add_trace(data = df_1, x = ~a, y = ~b) %>%
+plot_ly() |>
+ add_trace(data = df_1, x = ~a, y = ~b) |>
  add_trace(data = df_2, x = ~c, y = ~d)
 ```
 
@@ -114,7 +114,7 @@ p_scatter <- plot_ly(data = mtcars ,
         y = ~mpg, 
         type = 'scatter',
         mode = 'markers',
-        marker = list(size = 10, color = 'blue')) %>%
+        marker = list(size = 10, color = 'blue')) |>
   layout(title = "Car Weight vs MPG",
          xaxis = list(title = "Weight (1000 lbs)"),
          yaxis = list(title = "Miles Per Gallon"))
@@ -169,7 +169,7 @@ Distribution comparison across groups.
 plot_ly(data = iris,
         y = ~Sepal.Length,
         color = ~Species,
-        type = 'box') %>%
+        type = 'box') |>
   layout(title = "Sepal Length Distribution by Species",
          yaxis = list(title = "Sepal Length (cm)"))
 ```
@@ -183,7 +183,7 @@ plot_ly(x = ~iris$Petal.Length,
         type = 'histogram',
         nbinsx = 20,
         marker = list(color = 'coral',
-                     line = list(color = 'black', width = 1))) %>%
+                     line = list(color = 'black', width = 1))) |>
   layout(title = "Distribution of Petal Length",
          xaxis = list(title = "Petal Length (cm)"),
          yaxis = list(title = "Frequency"))
@@ -202,7 +202,7 @@ plot_ly(z = ~cor_matrix,
         y = rownames(cor_matrix),
         type = 'heatmap',
         colorscale = 'RdBu',
-        zmid = 0) %>%
+        zmid = 0) |>
   layout(title = "Correlation Matrix of Car Attributes",
          xaxis = list(title = ""),
          yaxis = list(title = ""))
@@ -220,7 +220,7 @@ plot_ly(data = iris,
         color = ~Species,
         type = 'scatter3d',
         mode = 'markers',
-        marker = list(size = 5)) %>%
+        marker = list(size = 5)) |>
   layout(title = "3D Iris Measurements",
          scene = list(
            xaxis = list(title = "Sepal Length"),
@@ -402,13 +402,13 @@ pyramid_by_geo
 ## Extra example: Show All / Hide All Buttons
 
 ```{r show_all_hide_all}
-p <- plot_ly(type = "scatter", mode = "markers") %>%
+p <- plot_ly(type = "scatter", mode = "markers") |>
   add_trace(
     data = iris,
     x = ~Sepal.Length,
     y = ~Sepal.Width ,
     color = ~Species
-  ) %>%
+  ) |>
   layout(
     updatemenus = list(
       list(
