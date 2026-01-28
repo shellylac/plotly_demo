@@ -13,6 +13,7 @@ library(plotly)
 library(dplyr)
 library(readr)
 library(here)
+library(htmlwidgets)
 ```
 
 ------------------------------------------------------------------------
@@ -109,15 +110,20 @@ Basic scatter plot showing the relationship between car weight and miles per gal
 
 ```{r scatter-basic}
 # Using the mtcars dataset
-p_scatter <- plot_ly(data = mtcars , 
-        x = ~wt, 
-        y = ~mpg, 
-        type = 'scatter',
-        mode = 'markers',
-        marker = list(size = 10, color = 'blue')) |>
-  layout(title = "Car Weight vs MPG",
-         xaxis = list(title = "Weight (1000 lbs)"),
-         yaxis = list(title = "Miles Per Gallon"))
+p_scatter <- plot_ly(
+  data = mtcars,
+  x = ~wt,
+  y = ~mpg,
+  type = 'scatter',
+  mode = 'markers',
+  marker = list(size = 10, color = 'blue'),
+  name = 'scatter' # This is relevant for legends - see subplot section below
+) |>
+  layout(
+    title = "Car Weight vs MPG",
+    xaxis = list(title = "Weight (1000 lbs)"),
+    yaxis = list(title = "Miles Per Gallon")
+  )
 
 p_scatter
 ```
@@ -128,17 +134,20 @@ p_scatter
 # NOTE! - need to order the points so they connect correctly
 mtcars_sorted <- mtcars[order(mtcars$wt), ]
 
-p_line <- plot_ly(data = mtcars_sorted, 
-        x = ~wt, 
-        y = ~mpg, 
-        type = 'scatter',
-        mode = 'lines', # Change the mode - from 'markers' to 'lines'
-        marker = list(size = 10, color = 'blue'),
-        line = list(color = "red")
-       ) |>
-  layout(title = "Car Weight vs MPG",
-         xaxis = list(title = "Weight (1000 lbs)"),
-         yaxis = list(title = "Miles Per Gallon"))
+p_line <- plot_ly(
+  data = mtcars_sorted,
+  x = ~wt,
+  y = ~mpg,
+  type = 'scatter',
+  mode = 'lines', # Change the mode - from 'markers' to 'lines'
+  marker = list(size = 10, color = 'blue'),
+  line = list(color = "red")
+) |>
+  layout(
+    title = "Car Weight vs MPG",
+    xaxis = list(title = "Weight (1000 lbs)"),
+    yaxis = list(title = "Miles Per Gallon")
+  )
 
 p_line
 ```
@@ -151,14 +160,21 @@ mpg_by_cyl <- mtcars |>
   group_by(cyl) |>
   summarise(avg_mpg = mean(mpg))
 
-plot_ly(data = mpg_by_cyl,
-        x = ~factor(cyl),
-        y = ~avg_mpg,
-        type = 'bar',
-        marker = list(color = 'darkgreen')) |>
-  layout(title = "Average MPG by Number of Cylinders",
-         xaxis = list(title = "Cylinders"),
-         yaxis = list(title = "Average MPG"))
+p_bar <- plot_ly(
+  data = mpg_by_cyl,
+  x = ~ factor(cyl),
+  y = ~avg_mpg,
+  type = 'bar',
+  marker = list(color = 'darkgreen'),
+  name = 'bar'
+) |>
+  layout(
+    title = "Average MPG by Number of Cylinders",
+    xaxis = list(title = "Cylinders"),
+    yaxis = list(title = "Average MPG")
+  )
+
+p_bar
 ```
 
 ## 4. Box Plot
@@ -166,12 +182,18 @@ plot_ly(data = mpg_by_cyl,
 Distribution comparison across groups.
 
 ```{r box-plot}
-plot_ly(data = iris,
-        y = ~Sepal.Length,
-        color = ~Species,
-        type = 'box') |>
-  layout(title = "Sepal Length Distribution by Species",
-         yaxis = list(title = "Sepal Length (cm)"))
+p_box <- plot_ly(
+  data = iris,
+  y = ~Sepal.Length,
+  color = ~Species,
+  type = 'box'
+) |>
+  layout(
+    title = "Sepal Length Distribution by Species",
+    yaxis = list(title = "Sepal Length (cm)")
+  )
+
+p_box
 ```
 
 ## 5. Histogram
@@ -179,14 +201,19 @@ plot_ly(data = iris,
 Distribution of a continuous variable.
 
 ```{r histogram}
-plot_ly(x = ~iris$Petal.Length,
-        type = 'histogram',
-        nbinsx = 20,
-        marker = list(color = 'coral',
-                     line = list(color = 'black', width = 1))) |>
-  layout(title = "Distribution of Petal Length",
-         xaxis = list(title = "Petal Length (cm)"),
-         yaxis = list(title = "Frequency"))
+p_hist <- plot_ly(
+  x = ~ iris$Petal.Length,
+  type = 'histogram',
+  nbinsx = 20,
+  marker = list(color = 'coral', line = list(color = 'black', width = 1))
+) |>
+  layout(
+    title = "Distribution of Petal Length",
+    xaxis = list(title = "Petal Length (cm)"),
+    yaxis = list(title = "Frequency")
+  )
+
+p_hist
 ```
 
 ## 6. Heatmap
@@ -197,15 +224,21 @@ plot_ly(x = ~iris$Petal.Length,
 # Create correlation matrix
 cor_matrix <- cor(mtcars[, c("mpg", "disp", "hp", "wt", "qsec")])
 
-plot_ly(z = ~cor_matrix,
-        x = colnames(cor_matrix),
-        y = rownames(cor_matrix),
-        type = 'heatmap',
-        colorscale = 'RdBu',
-        zmid = 0) |>
-  layout(title = "Correlation Matrix of Car Attributes",
-         xaxis = list(title = ""),
-         yaxis = list(title = ""))
+p_heat <- plot_ly(
+  z = ~cor_matrix,
+  x = colnames(cor_matrix),
+  y = rownames(cor_matrix),
+  type = 'heatmap',
+  colorscale = 'RdBu',
+  zmid = 0
+) |>
+  layout(
+    title = "Correlation Matrix of Car Attributes",
+    xaxis = list(title = ""),
+    yaxis = list(title = "")
+  )
+
+p_heat
 ```
 
 ## 7. 3D Scatter Plot
@@ -213,47 +246,59 @@ plot_ly(z = ~cor_matrix,
 Three-dimensional relationships.
 
 ```{r scatter-3d}
-plot_ly(data = iris,
-        x = ~Sepal.Length,
-        y = ~Sepal.Width,
-        z = ~Petal.Length,
-        color = ~Species,
-        type = 'scatter3d',
-        mode = 'markers',
-        marker = list(size = 5)) |>
-  layout(title = "3D Iris Measurements",
-         scene = list(
-           xaxis = list(title = "Sepal Length"),
-           yaxis = list(title = "Sepal Width"),
-           zaxis = list(title = "Petal Length")
-         ))
+p_3d <- plot_ly(
+  data = iris,
+  x = ~Sepal.Length,
+  y = ~Sepal.Width,
+  z = ~Petal.Length,
+  color = ~Species,
+  type = 'scatter3d',
+  mode = 'markers',
+  marker = list(size = 5)
+) |>
+  layout(
+    title = "3D Iris Measurements",
+    scene = list(
+      xaxis = list(title = "Sepal Length"),
+      yaxis = list(title = "Sepal Width"),
+      zaxis = list(title = "Petal Length")
+    )
+  )
+
+p_3d
 ```
 
 ------------------------------------------------------------------------
 # Arranging multiple figures in a single plot - `subplot`
 
 ```{r subplots}
-
 p_subplot <- plotly::subplot(
-          p_scatter,
-          p_line,
-          nrows = 1,
-          # For horizontal you use 
-          # nrows = 2,
-          # heights = c(0.7, 0.3),  # First row: 70%, Second row: 30%
-          shareX = FALSE,
-          shareY = FALSE,
-          titleX = TRUE,
-          titleY = TRUE)
-p_subplot
+  p_scatter,
+  p_bar,
+  # For side-by-side use
+  nrows = 1,
+  # For vertical placement use
+  # nrows = 2,
+  # heights = c(0.7, 0.3),  # e.g. First row: 70%, Second row: 30%
+  shareX = FALSE,
+  shareY = FALSE,
+  titleX = TRUE,
+  titleY = TRUE
+)
 
+p_subplot
 ```
 
 ------------------------------------------------------------------------
 # Saving a plot as a HTML object
 
 ```{r subplots}
-htmlwidgets::saveWidget(widget = p_subplot, file = here('output', 'my_plotly_figure.html'))
+# Creates a standalone HTML file of your figure
+# You can remove the extra html dir of files that gets created
+htmlwidgets::saveWidget(
+  widget = p_subplot,
+  file = here('output', 'my_plotly_figure.html')
+)
 ```
 
 
@@ -263,53 +308,70 @@ htmlwidgets::saveWidget(widget = p_subplot, file = here('output', 'my_plotly_fig
 
 ### Pyramid plot (% deaths by age category by sex)
 
--   Data input and wrangling
+#### Data input and wrangling
 
 ```{r step1-basic}
 # Read in the data 
 # `prop` is a column in the data that holds the % deaths for that age cat
 # Males have a negative `prop` to enable this figure to work
-pyramid_death_data <- read_csv(here('input', 'deaths_pyramid_data.csv'), show_col_types = FALSE)
+pyramid_death_data <- read_csv(
+  here('input', 'deaths_pyramid_data.csv'),
+  show_col_types = FALSE
+)
 
 # Ensure age category levels are ordered correctly
 pyramid_death_data_recoded <- pyramid_death_data |>
-  dplyr::mutate(age_label = factor(age_label, 
-                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99", "100+")))
+  dplyr::mutate(
+    age_label = factor(
+      age_label,
+      # fmt: skip
+      levels = c("0-4", "5-9", "10-14", "15-19", "20-24", 
+      "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", 
+      "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", 
+      "85-89", "90-94", "95-99", "100+")
+    )
+  )
+
 ```
 
--   Note - See how you can get more bespoke hover info showing in the figure (there is more than one way to specify hover info in plotly!)
 
+#### Build the plot
 ```{r step1-basic}
 # Pyramid plot
 pyramid_plot <- plot_ly(
-    # keep only Qld data at this stage
-    data = filter(pyramid_death_data_recoded, geo_label == "Queensland")) |>
-    add_bars(
-      x = ~prop, 
-      y = ~age_label,
-      color = ~sex_label,
-      orientation = 'h', # horizontal
-      colors = c("#563188", "#BBA4D9"),
-      # Modify hover text appearance and content
-      text = ~ paste0(sex_label, "\n", 
-                      "Year: ", time_period, "\n",
-                      "Age group (", age_label, "): ", sprintf("%.1f", abs(prop)),"%"),
-      textposition = 'none',
-      hoverinfo = 'text',
-      showlegend = FALSE,
-      visible = TRUE
-    ) |>
-    layout(
-      bargap = 0.1,
-      barmode = 'overlay',
-      yaxis = list(title = list(text = 'Age group', standoff = 10)),
-      xaxis = list(title = "% of deaths by age and sex",
-                   tickmode = 'array',
-                   tickvals = c(-15, -10, -5, 0, 5, 10, 15),
-                   ticktext = c('15', '10', '5', '0', '5', '10', '15')
-                  ),
-        autosize = T
-    )
+  # keep only Qld data at this stage
+  data = filter(pyramid_death_data_recoded, geo_label == "Queensland")
+) |>
+  add_bars(
+    x = ~prop,
+    y = ~age_label,
+    color = ~sex_label,
+    orientation = 'h', # horizontal
+    colors = c("#563188", "#BBA4D9"),
+    # Modify hover text appearance and content
+    # fmt:skip
+    text = ~ paste0(sex_label, "\n",
+                    "Year: ", time_period, "\n",
+                    "Age group (", age_label, "): ",
+                    sprintf("%.1f", abs(prop)), "%"),
+    textposition = 'none',
+    hoverinfo = 'text',
+    showlegend = FALSE,
+    visible = TRUE
+  ) |>
+  layout(
+    bargap = 0.1,
+    barmode = 'overlay',
+    yaxis = list(title = list(text = 'Age group', standoff = 10)),
+    xaxis = list(
+      title = "% of deaths by age and sex",
+      tickmode = 'array',
+      tickvals = c(-15, -10, -5, 0, 5, 10, 15),
+      ticktext = c('15', '10', '5', '0', '5', '10', '15')
+    ),
+    autosize = T
+  )
+
 pyramid_plot
 ```
 
@@ -428,7 +490,9 @@ p <- plot_ly(type = "scatter", mode = "markers") |>
       )
     )
   )
-  p
+
+# print the plot 
+p
 ```
 
 ## Animating a figure
@@ -447,7 +511,7 @@ mort_data_recoded <- mort_data |>
 
 # Ensure sex category levels are ordered
 mort_sexasr_data_recoded <- mort_sexasr_data |>
-     dplyr::mutate(sex_label = factor(sex_label, levels = c("Males", "Femalse")))
+     dplyr::mutate(sex_label = factor(sex_label, levels = c("Males", "Females")))
 ```
 
 #### The `frame` parameter
@@ -494,8 +558,8 @@ mort_animation_plot <- mort_animation_plot |>
         , tickmode = 'array'
         , tickvals = c(-15, -10, -5, 0, 5, 10, 15)
         , ticktext = c('15', '10', '5', '0', '5', '10', '15')
-        , autosize = T
-        , showgrid = F
+        , autosize = TRUE
+        , showgrid = FALSE
       )
   ) |>
  plotly::animation_opts(frame = 180, easing = "linear", redraw = FALSE) |>
