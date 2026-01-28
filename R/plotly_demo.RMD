@@ -257,7 +257,7 @@ p_subplot
 ------------------------------------------------------------------------
 # Saving a plot as a HTML object
 
-```{r subplots}
+```{r saving}
 htmlwidgets::saveWidget(widget = p_subplot, file = here('output', 'my_plotly_figure.html'))
 ```
 
@@ -265,7 +265,7 @@ htmlwidgets::saveWidget(widget = p_subplot, file = here('output', 'my_plotly_fig
 ------------------------------------------------------------------------
 # Modifying the button options
 
-```{r subplots}
+```{r modify_config}
 p_scatter <- p_scatter |> 
   plotly::config(displaylogo = FALSE, 
   modeBarButtonsToRemove = c("sendDataToCloud", "toggleSpikelines", "zoom2d", "pan2d", "select2d", "lasso2d")
@@ -281,7 +281,7 @@ p_scatter
 
 -   Data input and wrangling
 
-```{r step1-basic}
+```{r pyramid_data}
 # Read in the data 
 # `prop` is a column in the data that holds the % deaths for that age cat
 # Males have a negative `prop` to enable this figure to work
@@ -295,7 +295,7 @@ pyramid_death_data_recoded <- pyramid_death_data |>
 
 -   Note - See how you can get more bespoke hover info showing in the figure (there is more than one way to specify hover info in plotly!)
 
-```{r step1-basic}
+```{r pyramid_plot}
 # Pyramid plot
 pyramid_plot <- plot_ly(
     # keep only Qld data at this stage
@@ -347,7 +347,7 @@ pyramid_plot
 
     3.  **`args`** – *what exactly* gets changed
 
-```{r step2-traces}
+```{r pyramid_dropdown}
 pyramid_by_geo <- plot_ly() |>
     # add first visible trace - Queensland - with legend on
   add_bars(data = filter(pyramid_death_data_recoded,
@@ -451,7 +451,7 @@ p <- plot_ly(type = "scatter", mode = "markers") |>
 
 -   We are going to show changes in Qld mortality rates over time (like those in the [CHO report](https://www.choreport.health.qld.gov.au/from-the-cho/ageing-and-future-healthcare-demand))
 
-```{r step1-basic}
+```{r mort-data-read}
 # Read in the mortality data 
 mort_data <- read_csv(here('input', 'mort_pyramid_data.csv'), show_col_types = FALSE)
 mort_sexasr_data <- read_csv(here('input', 'mort_sexasr_data.csv'), show_col_types = FALSE)
