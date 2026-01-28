@@ -230,27 +230,30 @@ plot_ly(data = iris,
 
 ------------------------------------------------------------------------
 
-# Part B: Building a pyramid plot
+# A pyramid plot journey...
 
 ### Pyramid plot (% deaths by age category by sex)
 
--   Note the preliminary data wrangling that happens (similar to ggplot)
+-   Data input and wrangling
+
+```{r step1-basic}
+# Read in the data 
+# `prop` is a column in the data that holds the % deaths for that age cat
+# Males have a negative `prop` to enable this figure to work
+pyramid_death_data <- read_csv(here('input', 'deaths_pyramid_data.csv'), show_col_types = FALSE)
+
+# Ensure age category levels are ordered correctly
+pyramid_death_data_recoded <- pyramid_death_data |>
+  dplyr::mutate(age_label = factor(age_label, 
+                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99", "100+")))
+```
 
 -   Note the modification I've made to get bespoke hover info showing in the figure (there is more than one way to specify hover info in plotly!)
 
 ```{r step1-basic}
-# Read in the data 
-pyramid_death_data <- read_csv(here('input', 'pyramid_data.csv'), show_col_types = FALSE)
-
-# Ensure age category levels are correct
-pyramid_death_data_recoded <- pyramid_death_data |>
-  dplyr::mutate(age_label = factor(age_label, 
-                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99", "100+")))
-
-# Basic plot
-# `prop` is a column in the data that holds the % deaths for that age cat
-# Males have a negatie `prop` to enable this figure to work
+# Pyramid plot
 pyramid_plot <- plot_ly(
+    # keep only Qld data at this stage
     data = filter(pyramid_death_data_recoded, geo_label == "Queensland")) |>
     add_bars(
       x = ~prop, 
@@ -258,6 +261,7 @@ pyramid_plot <- plot_ly(
       color = ~sex_label,
       orientation = 'h', # horizontal
       colors = c("#563188", "#BBA4D9"),
+      # Modify hover text appearance and content
       text = ~ paste0(sex_label, "\n", 
                       "Year: ", time_period, "\n",
                       "Age group (", age_label, "): ", sprintf("%.1f", abs(prop)),"%"),
@@ -280,82 +284,123 @@ pyramid_plot <- plot_ly(
 pyramid_plot
 ```
 
-## Step 2: Adding a Second Trace
+## Adding Drop Down Buttons
 
-Add automatic transmission cars as a separate trace for comparison.
+#### What are `updatemenus`?
+
+`updatemenus` are **UI controls** (dropdowns, buttons, toggles) that let users **change the state of an existing figure** *without re-drawing it* .
+
+-   They do **not**: Load new data / Re-run R code / Trigger Shiny reactivity
+
+-   They **only modify the current figure state**.
+
+-   The three things that matter:
+
+    1.  **`type`** – how the control looks
+
+    2.  **`method`** – *what kind* of update happens (restyle, relayout, update)
+
+    3.  **`args`** – *what exactly* gets changed
 
 ```{r step2-traces}
-# Separate data by transmission type
-mtcars$transmission <- ifelse(mtcars$am == 0, "Automatic", "Manual")
+pyramid_by_geo <- plot_ly() |>
+    # add first visible trace - Queensland - with legend on
+  add_bars(data = filter(pyramid_death_data_recoded,
+                         geo_label == "Queensland"),
+           x = ~prop,
+           y = ~age_label,
+           color = ~sex_label,
+           orientation = 'h',
+           colors = c("#563188", "#BBA4D9"),
+           text = ~paste0("Age group (", age_label, "): ", abs(prop), "%"),
+           textposition = 'none',
+           hoverinfo = 'text',
+           showlegend = TRUE,
+           visible = TRUE) |>
+    # add second 'hidden' trace - Australia -  with legend off
+  add_bars(data = filter(pyramid_death_data_recoded,
+                         geo_label == "Australia"),
+           x = ~prop,
+           y = ~age_label,
+           color = ~sex_label,
+           colors = c("#563188", "#BBA4D9"),
+           orientation = 'h',
+           text = ~paste0("Age group (", age_label, "): ", abs(prop), "%"),
+           textposition = 'none',
+           hoverinfo = 'text',
+           showlegend = TRUE,
+           visible = FALSE) |>
+  layout(bargap = 0.1,
+         barmode = 'overlay',
+         yaxis = list(title = 'Age group'),
+         xaxis = list(title = '% of Deaths',
+                      tickmode = 'array',
+                      tickvals = c(-15, -10, -5, 0, 5, 10, 15),
+                      ticktext = c('15', '10', '5', '0', '5', '10', '15'))
 
-# Create plot with two traces
-p2 <- plot_ly(data = mtcars %>% filter(transmission == "Automatic"),
-              x = ~hp,
-              y = ~mpg,
-              name = 'Automatic',
-              type = 'scatter',
-              mode = 'markers',
-              marker = list(size = 10)) %>%
-  # Add second trace for manual transmission
-  add_trace(data = mtcars %>% filter(transmission == "Manual"),
-            x = ~hp,
-            y = ~mpg,
-            name = 'Manual',
-            marker = list(size = 10))
+# Add dropdown option  
+pyramid_by_geo <- pyramid_by_geo |>
+  layout(updatemenus = list(
+           list(
+             x = 0,
+             y = 1.2,
+             type = "dropdown",
+             buttons = list(
+               list(label = "Queensland", method = "update",
+                    # this list refers to Qld_males, Qld_females, Aust_males, Aust_females)
+                    args = list(list(visible = c(TRUE, TRUE, FALSE, FALSE)),
+                                list(title = ""))),
+               list(label = "Australia", method = "update",
+                    args = list(list(visible = c(FALSE, FALSE, TRUE, TRUE)),
+                                list(title = "")))
+             )
+           )
+         ),
+         margin = list(b = 130, r = 80),
+         legend = list(
+           orientation = "h",  # Horizontal layout
+           x = 0.5,            # Center the legend horizontally
+           y = 1.1,            # Position the legend below the plot area
+           xanchor = "center", # Anchor the legend at its center
+           yanchor = "top"     # Anchor the legend above the specified y position
+         ) 
+         ) 
 
-p2 %>%
-  layout(title = "Step 2: Multiple Traces (by Transmission)",
-         xaxis = list(title = "Horsepower"),
-         yaxis = list(title = "MPG"))
+pyramid_by_geo
 ```
 
-## Step 3: Customizing Colors and Fonts
+## Animating a figure
 
-Enhance visual appearance with custom colors, fonts, and styling.
+-   We are going to show changes in Qld mortality rates over time
+
+```{r step1-basic}
+# Read in the mortality data 
+mort_data <- read_csv(here('input', 'mort_pyramid_data.csv'), show_col_types = FALSE)
+mort_data_recoded <- mort_data |> 
+    dplyr::mutate(age_label = factor(age_label, 
+                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99", "100+")))
+```
 
 ```{r step3-styling}
-# Custom color palette
-colors <- c('Automatic' = '#E74C3C', 'Manual' = '#3498DB')
-
-p3 <- plot_ly(data = mtcars %>% filter(transmission == "Automatic"),
-              x = ~hp,
-              y = ~mpg,
-              name = 'Automatic',
-              type = 'scatter',
-              mode = 'markers',
-              marker = list(size = 12, 
-                           color = colors['Automatic'],
-                           line = list(color = 'white', width = 1))) %>%
-  add_trace(data = mtcars %>% filter(transmission == "Manual"),
-            x = ~hp,
-            y = ~mpg,
-            name = 'Manual',
-            marker = list(size = 12,
-                         color = colors['Manual'],
-                         line = list(color = 'white', width = 1)))
-
-p3 %>%
-  layout(
-    title = list(
-      text = "Step 3: Custom Colors and Fonts",
-      font = list(family = "Arial, sans-serif", size = 20, color = '#2C3E50')
-    ),
-    xaxis = list(
-      title = "Horsepower",
-      titlefont = list(size = 16, family = "Arial, sans-serif"),
-      tickfont = list(size = 12)
-    ),
-    yaxis = list(
-      title = "Miles Per Gallon",
-      titlefont = list(size = 16, family = "Arial, sans-serif"),
-      tickfont = list(size = 12)
-    ),
-    legend = list(
-      font = list(family = "Arial, sans-serif", size = 14)
-    ),
-    plot_bgcolor = '#F8F9FA',
-    paper_bgcolor = '#FFFFFF'
-  )
+mort_animation_plot <-
+        plot_ly(data = mort_data_recoded) |>
+          add_trace(
+          x = ~prop,
+          y = ~age_label,
+          frame = ~time_period,
+          color = ~sex_label,
+          type = 'bar',
+          orientation = 'h',
+          colors = c("#563188", "#BBA4D9"),
+          text = ~hovertext_col,
+          textposition = 'none',
+          hoverinfo = 'text',
+          showlegend = FALSE,
+          visible = TRUE,
+          x = 'x1',
+          y = 'y1'
+        )
+mort_animation_plot
 ```
 
 ## Step 4: Enhanced Hover Information
