@@ -32,6 +32,7 @@ output/*
 
 #Exception to the above rules
 !input/.gitkeep
+!input/*.csv
 !output/.gitkeep
 !docs/.gitkeep
 .Rproj.user
