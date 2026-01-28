@@ -291,11 +291,13 @@ p_subplot
 ## Saving a plot as a HTML object
 
 ```{r saving}
-# Saves a stand alone HTML file 
+# Saves a stand alone HTML file
 htmlwidgets::saveWidget(
   widget = p_subplot,
   file = here('output', 'my_plotly_figure.html')
 )
+# You can delete the directory of extra files that is produced if you want
+# unlink(here('output', 'my_plotly_figure'), recursive = TRUE)
 ```
 
 ## Modifying the button options
@@ -326,12 +328,24 @@ p_scatter
 # Read in the data 
 # `prop` is a column in the data that holds the % deaths for that age cat
 # Males have a negative `prop` to enable this figure to work
-pyramid_death_data <- read_csv(here('input', 'deaths_pyramid_data.csv'), show_col_types = FALSE)
+pyramid_death_data <- read_csv(
+  here('input', 'deaths_pyramid_data.csv'),
+  show_col_types = FALSE
+)
 
 # Ensure age category levels are ordered correctly
 pyramid_death_data_recoded <- pyramid_death_data |>
-  dplyr::mutate(age_label = factor(age_label, 
-                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99", "100+")))
+  dplyr::mutate(
+    age_label = factor(
+      age_label,
+      # fmt: skip
+      levels = c("0-4", "5-9", "10-14", "15-19", 
+      "20-24", "25-29", "30-34", "35-39", "40-44", 
+      "45-49",  "50-54", "55-59", "60-64", "65-69", 
+      "70-74", "75-79", "80-84", "85-89", "90-94", 
+      "95-99", "100+")
+    )
+  )
 ```
 
 -   Note - See how you can get more bespoke hover info showing in the figure (there is more than one way to specify hover info in plotly!)
@@ -339,34 +353,45 @@ pyramid_death_data_recoded <- pyramid_death_data |>
 ```{r pyramid_plot}
 # Pyramid plot
 pyramid_plot <- plot_ly(
-    # keep only Qld data at this stage
-    data = filter(pyramid_death_data_recoded, geo_label == "Queensland")) |>
-    add_bars(
-      x = ~prop, 
-      y = ~age_label,
-      color = ~sex_label,
-      orientation = 'h', # horizontal
-      colors = c("#563188", "#BBA4D9"),
-      # Modify hover text appearance and content
-      text = ~ paste0(sex_label, "\n", 
-                      "Year: ", time_period, "\n",
-                      "Age group (", age_label, "): ", sprintf("%.1f", abs(prop)),"%"),
-      textposition = 'none',
-      hoverinfo = 'text',
-      showlegend = FALSE,
-      visible = TRUE
-    ) |>
-    layout(
-      bargap = 0.1,
-      barmode = 'overlay',
-      yaxis = list(title = list(text = 'Age group', standoff = 10)),
-      xaxis = list(title = "% of deaths by age and sex",
-                   tickmode = 'array',
-                   tickvals = c(-15, -10, -5, 0, 5, 10, 15),
-                   ticktext = c('15', '10', '5', '0', '5', '10', '15')
-                  ),
-        autosize = T
-    )
+  # keep only Qld data at this stage
+  data = filter(pyramid_death_data_recoded, geo_label == "Queensland")
+) |>
+  add_bars(
+    x = ~prop,
+    y = ~age_label,
+    color = ~sex_label,
+    orientation = 'h', # horizontal
+    colors = c("#563188", "#BBA4D9"),
+    # Modify hover text appearance and content
+    text = ~ paste0(
+      sex_label,
+      "\n",
+      "Year: ",
+      time_period,
+      "\n",
+      "Age group (",
+      age_label,
+      "): ",
+      sprintf("%.1f", abs(prop)),
+      "%"
+    ),
+    textposition = 'none',
+    hoverinfo = 'text',
+    showlegend = FALSE,
+    visible = TRUE
+  ) |>
+  layout(
+    bargap = 0.1,
+    barmode = 'overlay',
+    yaxis = list(title = list(text = 'Age group', standoff = 10)),
+    xaxis = list(
+      title = "% of deaths by age and sex",
+      tickmode = 'array',
+      tickvals = c(-15, -10, -5, 0, 5, 10, 15),
+      ticktext = c('15', '10', '5', '0', '5', '10', '15')
+    ),
+    autosize = TRUE
+  )
 pyramid_plot
 ```
 
@@ -390,68 +415,84 @@ pyramid_plot
 
 ```{r pyramid_dropdown}
 pyramid_by_geo <- plot_ly() |>
-    # add first visible trace - Queensland - with legend on
-  add_bars(data = filter(pyramid_death_data_recoded,
-                         geo_label == "Queensland"),
-           x = ~prop,
-           y = ~age_label,
-           color = ~sex_label,
-           orientation = 'h',
-           colors = c("#563188", "#BBA4D9"),
-           text = ~paste0("Age group (", age_label, "): ", abs(prop), "%"),
-           textposition = 'none',
-           hoverinfo = 'text',
-           showlegend = TRUE,
-           visible = TRUE) |>
-    # add second 'hidden' trace - Australia -  with legend off
-  add_bars(data = filter(pyramid_death_data_recoded,
-                         geo_label == "Australia"),
-           x = ~prop,
-           y = ~age_label,
-           color = ~sex_label,
-           colors = c("#563188", "#BBA4D9"),
-           orientation = 'h',
-           text = ~paste0("Age group (", age_label, "): ", abs(prop), "%"),
-           textposition = 'none',
-           hoverinfo = 'text',
-           showlegend = TRUE,
-           visible = FALSE) |>
-  layout(bargap = 0.1,
-         barmode = 'overlay',
-         yaxis = list(title = 'Age group'),
-         xaxis = list(title = '% of Deaths',
-                      tickmode = 'array',
-                      tickvals = c(-15, -10, -5, 0, 5, 10, 15),
-                      ticktext = c('15', '10', '5', '0', '5', '10', '15'))
+  # add first visible trace - Queensland - with legend on
+  add_bars(
+    data = filter(pyramid_death_data_recoded, geo_label == "Queensland"),
+    x = ~prop,
+    y = ~age_label,
+    color = ~sex_label,
+    orientation = 'h',
+    colors = c("#563188", "#BBA4D9"),
+    text = ~ paste0("Age group (", age_label, "): ", abs(prop), "%"),
+    textposition = 'none',
+    hoverinfo = 'text',
+    showlegend = TRUE,
+    visible = TRUE
+  ) |>
+  # add second 'hidden' trace - Australia -  with legend off
+  add_bars(
+    data = filter(pyramid_death_data_recoded, geo_label == "Australia"),
+    x = ~prop,
+    y = ~age_label,
+    color = ~sex_label,
+    colors = c("#563188", "#BBA4D9"),
+    orientation = 'h',
+    text = ~ paste0("Age group (", age_label, "): ", abs(prop), "%"),
+    textposition = 'none',
+    hoverinfo = 'text',
+    showlegend = TRUE,
+    visible = FALSE
+  ) |>
+  layout(
+    bargap = 0.1,
+    barmode = 'overlay',
+    yaxis = list(title = 'Age group'),
+    xaxis = list(
+      title = '% of Deaths',
+      tickmode = 'array',
+      tickvals = c(-15, -10, -5, 0, 5, 10, 15),
+      ticktext = c('15', '10', '5', '0', '5', '10', '15')
+    )
   )
 
-# Add dropdown option  
+# Add dropdown option
 pyramid_by_geo <- pyramid_by_geo |>
-  layout(updatemenus = list(
-           list(
-             x = 0,
-             y = 1.2,
-             type = "dropdown",
-             buttons = list(
-               list(label = "Queensland", method = "update",
-                    # this list refers to Qld_males, Qld_females, Aust_males, Aust_females)
-                    args = list(list(visible = c(TRUE, TRUE, FALSE, FALSE)),
-                                list(title = ""))),
-               list(label = "Australia", method = "update",
-                    args = list(list(visible = c(FALSE, FALSE, TRUE, TRUE)),
-                                list(title = "")))
-             )
-           )
-         ),
-         margin = list(b = 130, r = 80),
-         legend = list(
-           orientation = "h",  # Horizontal layout
-           x = 0.5,            # Center the legend horizontally
-           y = 1.1,            # Position the legend below the plot area
-           xanchor = "center", # Anchor the legend at its center
-           yanchor = "top"     # Anchor the legend above the specified y position
-         ) 
-         ) 
+  layout(
+    updatemenus = list(
+      list(
+        x = 0,
+        y = 1.2,
+        type = "dropdown",
+        buttons = list(
+          list(
+            label = "Queensland",
+            method = "update",
+            # this list refers to Qld_males, Qld_females, Aust_males, Aust_females)
+            args = list(
+              list(visible = c(TRUE, TRUE, FALSE, FALSE)),
+              list(title = "")
+            )
+          ),
+          list(
+            label = "Australia",
+            method = "update",
+            args = list(
+              list(visible = c(FALSE, FALSE, TRUE, TRUE)),
+              list(title = "")
+            )
+          )
+        )
+      )
+    ),
+    margin = list(b = 130, r = 80),
+    legend = list(
+      orientation = "h", # Horizontal layout
+      x = 0.5, # Center the legend horizontally
+      y = 1.1, # Position the legend below the plot area
+      xanchor = "center", # Anchor the legend at its center
+      yanchor = "top" # Anchor the legend above the specified y position
+    )
+  )
 
 pyramid_by_geo
 ```
@@ -485,7 +526,7 @@ p <- plot_ly(type = "scatter", mode = "markers") |>
       )
     )
   )
-  p
+p
 ```
 
 ## Animating a figure
@@ -494,17 +535,31 @@ p <- plot_ly(type = "scatter", mode = "markers") |>
 
 ```{r mort-data-read}
 # Read in the mortality data 
-mort_data <- read_csv(here('input', 'mort_pyramid_data.csv'), show_col_types = FALSE)
-mort_sexasr_data <- read_csv(here('input', 'mort_sexasr_data.csv'), show_col_types = FALSE)
+mort_data <- read_csv(
+  here('input', 'mort_pyramid_data.csv'),
+  show_col_types = FALSE
+)
+mort_sexasr_data <- read_csv(
+  here('input', 'mort_sexasr_data.csv'),
+  show_col_types = FALSE
+)
 
 # Ensure age category levels are ordered correctly
-mort_data_recoded <- mort_data |> 
-    dplyr::mutate(age_label = factor(age_label, 
-                                   levels = c("0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49",  "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95+")))
+mort_data_recoded <- mort_data |>
+  dplyr::mutate(
+    age_label = factor(
+      age_label,
+      # fmt: skip
+      levels = c("0-4", "5-9", "10-14", "15-19", 
+      "20-24", "25-29", "30-34", "35-39", "40-44", 
+      "45-49",  "50-54", "55-59", "60-64", "65-69", 
+      "70-74", "75-79", "80-84", "85-89", "90-94", "95+")
+    )
+  )
 
 # Ensure sex category levels are ordered
 mort_sexasr_data_recoded <- mort_sexasr_data |>
-     dplyr::mutate(sex_label = factor(sex_label, levels = c("Males", "Femalse")))
+  dplyr::mutate(sex_label = factor(sex_label, levels = c("Males", "Females")))
 ```
 
 #### The `frame` parameter
@@ -551,8 +606,8 @@ mort_animation_plot <- mort_animation_plot |>
         , tickmode = 'array'
         , tickvals = c(-15, -10, -5, 0, 5, 10, 15)
         , ticktext = c('15', '10', '5', '0', '5', '10', '15')
-        , autosize = T
-        , showgrid = F
+        , autosize = TRUE
+        , showgrid = FALSE
       )
   ) |>
  plotly::animation_opts(frame = 180, easing = "linear", redraw = FALSE) |>
