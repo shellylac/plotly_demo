@@ -5,6 +5,10 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
 # Setup
 
 ```{r load-packages}
@@ -133,7 +137,6 @@ p_line <- plot_ly(data = mtcars_sorted,
         y = ~mpg, 
         type = 'scatter',
         mode = 'lines', # Change the mode - from 'markers' to 'lines'
-        marker = list(size = 10, color = 'blue'),
         line = list(color = "red")
        ) |>
   layout(title = "Car Weight vs MPG",
@@ -155,7 +158,9 @@ plot_ly(data = mpg_by_cyl,
         x = ~factor(cyl),
         y = ~avg_mpg,
         type = 'bar',
-        marker = list(color = 'darkgreen')) |>
+        color = ~factor(cyl) 
+        # marker = list(color = 'darkgreen') # Single specified colour
+        ) |>
   layout(title = "Average MPG by Number of Cylinders",
          xaxis = list(title = "Cylinders"),
          yaxis = list(title = "Average MPG"))
@@ -256,6 +261,17 @@ p_subplot
 htmlwidgets::saveWidget(widget = p_subplot, file = here('output', 'my_plotly_figure.html'))
 ```
 
+
+------------------------------------------------------------------------
+# Modifying the button options
+
+```{r subplots}
+p_scatter <- p_scatter |> 
+  plotly::config(displaylogo = FALSE, 
+  modeBarButtonsToRemove = c("sendDataToCloud", "toggleSpikelines", "zoom2d", "pan2d", "select2d", "lasso2d")
+    ) 
+p_scatter
+```
 
 ------------------------------------------------------------------------
 
@@ -516,13 +532,14 @@ mort_animation_plot
 ## Key Plotly Concepts
 
 -   **`plot_ly()`**: Main function to create plots
--   **`add_trace()`**: Add additional data series
+-   **`add_trace()`**: Add additional data series (Also specific `add_*` functions)
 -   **`layout()`**: Customize plot appearance and interactivity
 -   **`type`**: Specifies chart type (scatter, bar, box, etc.)
 -   **`mode`**: For scatter plots (markers, lines, or both)
 -   **`marker`**: Customize point appearance
 -   **`text` & `hoverinfo`**: Control hover text display
 -   **`updatemenus`**: Add interactive controls (dropdowns, buttons)
+-   **`subplot`**: arrange multiple plotly objects
 
 ## Additional Resources
 
