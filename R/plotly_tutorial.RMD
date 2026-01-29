@@ -272,6 +272,10 @@ p_subplot <- plotly::subplot(
 p_subplot
 ```
 
+ - **NOTE** see [Client Side Linking](https://plotly-r.com/client-side-linking) - for ways to link hover info and highlighting across multiple figures in a subplot
+  
+------------------------------------------------------------------------
+
 ## Saving a plot as a HTML object
 
 ```{r saving}
@@ -527,10 +531,6 @@ mort_data_recoded <- mort_data |>
       "70-74", "75-79", "80-84", "85-89", "90-94", "95+")
     )
   )
-
-# Ensure sex category levels are ordered
-mort_sexasr_data_recoded <- mort_sexasr_data |>
-  dplyr::mutate(sex_label = factor(sex_label, levels = c("Males", "Females")))
 ```
 
 #### The `frame` parameter
