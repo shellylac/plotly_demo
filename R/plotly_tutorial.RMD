@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 ```{r load-packages}
 # Install if needed: install.packages("plotly")
+library(ggplot2)
 library(plotly)
 library(dplyr)
 library(readr)
@@ -120,7 +121,8 @@ p_scatter <- plot_ly(
   y = ~mpg,
   type = 'scatter',
   mode = 'markers',
-  marker = list(size = 10, color = 'blue')
+  marker = list(size = 10, color = 'blue'),
+  name = "scatter" # This is important for legends - see below
 ) |>
   layout(
     title = "Car Weight vs MPG",
@@ -143,7 +145,8 @@ p_line <- plot_ly(
   y = ~mpg,
   type = 'scatter',
   mode = 'lines', # Change the mode - from 'markers' to 'lines'
-  line = list(color = "red")
+  line = list(color = "red"),
+  name = "line"
 ) |>
   layout(
     title = "Car Weight vs MPG",
@@ -167,7 +170,7 @@ p_bar <- plot_ly(
   x = ~ factor(cyl),
   y = ~avg_mpg,
   type = 'bar',
-  color = ~ factor(cyl)
+  color = ~ factor(cyl),
   # marker = list(color = 'darkgreen') # Single specified colour
 ) |>
   layout(
@@ -292,12 +295,10 @@ p_subplot
 
 ```{r saving}
 # Saves a stand alone HTML file
-htmlwidgets::saveWidget(
-  widget = p_subplot,
+htmltools::save_html(
+  html = p_subplot,
   file = here('output', 'my_plotly_figure.html')
 )
-# You can delete the directory of extra files that is produced if you want
-# unlink(here('output', 'my_plotly_figure'), recursive = TRUE)
 ```
 
 ## Modifying the button options
@@ -622,6 +623,47 @@ mort_animation_plot
 -   Also Note - in the above examples we use a data column `hovertext_col` for hoverinfo.
 
     -   Entries in this column are formatted text: `"Females\nYear: 1971\nAge group: 0-4 years\nProportion of population: 9.7%\nCount:  88,974"`
+
+------------------------------------------------------------------------
+
+# But What about the magic of `ggplotly()`
+
+```{r ggplotly_ex}
+p <- ggplot(mtcars, aes(wt, mpg, colour = factor(cyl))) +
+  geom_point() +
+  labs(
+    title = "Fuel Efficiency vs Weight",
+    colour = "Cylinders"
+  )
+
+ggplotly(p)
+```
+
+### Not COMPLETELY magical
+
+-   poor hover customization (can't format numbers etc)
+-   secondary y-axes don't work at all in ggplotly
+-   annotations: shape and text annotations don't convert reliably
+-   No 3D visualization support
+-   Won't translate subplot type figs very well
+-   Some ggplot themes will break it
+-   AND many more issues!!
+
+```{r ggplotly_fails}
+mtcars_formatted <- mtcars |>
+  mutate(
+    car_name = rownames(mtcars),
+    cyl = factor(cyl)
+  )
+
+# Need to use text aesthetic to modify hover info - but still limited
+p1_text <- ggplot(mtcars_formatted, aes(wt, mpg, color = cyl)) +
+  geom_point(aes(text = paste0("POINT: ", car_name)), size = 2.6, alpha = 0.75) +
+  geom_smooth(aes(text = paste0("SMOOTH: cyl=", cyl)), se = FALSE, linewidth = 1) +
+  theme_minimal() 
+p1_text
+ggplotly(p1_text)
+```
 
 ------------------------------------------------------------------------
 
