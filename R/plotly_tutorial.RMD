@@ -264,16 +264,16 @@ p_subplot <- plotly::subplot(
   # For vertical layout you use
   # nrows = 2,
   # heights = c(0.7, 0.3),  # First row: 70%, Second row: 30%
-  shareX = FALSE,
-  shareY = FALSE,
+  shareX = TRUE,
+  shareY = TRUE,
   titleX = TRUE,
   titleY = TRUE
 )
 p_subplot
 ```
 
- - **NOTE** see [Client Side Linking](https://plotly-r.com/client-side-linking) - for ways to link hover info and highlighting across multiple figures in a subplot
-  
+-   **NOTE** see [Client Side Linking](https://plotly-r.com/client-side-linking) - for ways to link hover info and highlighting across multiple figures in a subplot
+
 ------------------------------------------------------------------------
 
 ## Saving a plot as a HTML object
@@ -285,7 +285,7 @@ htmltools::save_html(
   file = here('output', 'my_plotly_figure.html')
 )
 # Look at it
-# utils::browseURL(here('output', 'my_plotly_figure.html'))
+utils::browseURL(here('output', 'my_plotly_figure.html'))
 ```
 
 ## Modifying the button options
@@ -657,6 +657,6 @@ ggplotly(p1_text)
 
 ## Additional Resources
 
--   Plotly R documentation: https://plotly.com/r/
--   Plotly R book: https://plotly-r.com/
--   Gallery of examples: https://plotly.com/r/
+-   Plotly R documentation: <https://plotly.com/r/>
+-   Plotly R book: <https://plotly-r.com/>
+-   Gallery of examples: <https://plotly.com/r/>
