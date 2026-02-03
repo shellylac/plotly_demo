@@ -1,39 +1,34 @@
-# plotly_demo
+## Plotly R Tutorial
 
+This repository contains a hands‑on Plotly for R tutorial demo'ed in the Qld Health data science monthly community hang out teams session. 
 
-## Project Intro/Objective:
+The primary tutorial is `R/plotly_demo.RMD` — an R Markdown tutorial that demonstrates creating interactive charts (scatter, line, bar, box, histogram, heatmap, 3D, subplots, animations, buttons, and pyramid plots) with plotly and htmlwidgets.
 
-The purpose of this project is to ________...
-* Eliminate world hunger
-* Make The World Great Again
-* Drink gin
+This markdown file is to be "walked-through" in the live demo (not rendered/knitted).
 
-## People involved:
+### What is covered 
+ - Learn plotly’s object model and common chart types
+ - Understand plot_ly → add_trace → layout workflow
+ - Code to build basic scatter, line, bar, box, histogram, heatmap, and 3D plots
+ - Quick demo of subplots, dropdowns, show/hide controls
+ - Case-study of building frame-based animations
+ - Exporting interactive figures to standalone HTML
+ 
 
-List who is involved and who is responsible, etc
+### Prerequisites
+ - R >= 4.0
+ - Basic familiarity with tidyverse-style data frames
+ - The tutorial uses the following packages:
+ ```
+ # R
+ install.packages(c("plotly", "dplyr", "readr", "here", "htmlwidgets", "rmarkdown", "knitr"))
+ ```
+  
 
-#### -- Project Status: [Active, On-Hold, Completed]
+### Data inputs
+ - Can be found in `R/input`
+ 
+### Further reading
 
-## Methods to run analysis / produce output:
-
-Here is where instructions go for whatever is in this repo (how to run scripts, how to produce outputs, what ever is needed so that someone else can replicate your work)
-
-### Key Files Needed
-
-Give details of all inputs needed (e.g. data files) and where to find/source them
-
-### Dependencies / Requirements:
-
-Which R packages? environment variables? database connections? etc? are needed
-
-### Procedure:
-
-Detail the operating procedures.
-
-## Expected Output:
-
-What is produced and where is it saved/stored?
-
-## Issues / Problems / Good to know...
-
-if any ....
+- Plotly R docs: https://plotly.com/r/
+- Plotly R book: https://plotly-r.com/
