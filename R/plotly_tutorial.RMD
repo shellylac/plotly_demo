@@ -285,7 +285,7 @@ htmltools::save_html(
   file = here('output', 'my_plotly_figure.html')
 )
 # Look at it
-utils::browseURL(here('output', 'my_plotly_figure.html'))
+# utils::browseURL(here('output', 'my_plotly_figure.html'))
 ```
 
 ## Modifying the button options
